@@ -1,0 +1,34 @@
+{
+  "name": "@miroculus/log",
+  "version": "1.0.0",
+  "description": "Node.js log library",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "test:watch": "nodemon -x mocha",
+    "standard": "standard",
+    "standard:fix": "standard --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miroculus/log.git"
+  },
+  "keywords": [
+    "log"
+  ],
+  "author": "mjlescano",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/miroculus/log/issues"
+  },
+  "homepage": "https://github.com/miroculus/log#readme",
+  "dependencies": {
+    "@sentry/node": "5.1.2"
+  },
+  "devDependencies": {
+    "mocha": "6.1.4",
+    "nodemon": "1.19.0",
+    "pre-commit": "1.2.2",
+    "standard": "12.0.1"
+  }
+}
