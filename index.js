@@ -9,10 +9,10 @@ const now = () => {
   return `${time} ${gmt >= 0 ? '-' : '+'}${gmt}`
 }
 
-const prefix = (level = 'DEBUG', prefix = null) =>
-  `[${level}][${now()}]${prefix ? `[${prefix}]` : ''}`
+const prefix = (level = 'DEBUG', scope = null) =>
+  `[${level}][${now()}]${scope ? `[${scope}]` : ''}`
 
-const levels = [
+const LEVELS = [
   'critical',
   'error',
   'warn',
@@ -20,33 +20,60 @@ const levels = [
   'debug'
 ]
 
-// Define log levels and default handlers, which will show them on the console
-// if enabled using LOG_LEVEL
-const loggers = [
-  { level: 'critical', fn: (...args) => console.error(prefix('CRITICAL'), ...args) },
-  { level: 'error', fn: (...args) => console.error(prefix('ERROR'), ...args) },
-  { level: 'warn', fn: (...args) => console.warn(prefix('WARN'), ...args) },
-  { level: 'info', fn: (...args) => console.log(prefix('INFO'), ...args) },
-  { level: 'debug', fn: (...args) => console.log(prefix('DEBUG'), ...args) }
-]
+Object.freeze(LEVELS)
 
-// From which level we will log to the console?
-const logLevelIndex = loggers.findIndex(({ level }) => logLevel === level)
-if (logLevelIndex === -1) throw new Error(`Invalid LOG_LEVEL ${logLevel}.`)
+const defaultLoggers = {
+  critical: (scope, ...args) => console.error(prefix('CRITICAL', scope), ...args),
+  error: (scope, ...args) => console.error(prefix('ERROR', scope), ...args),
+  warn: (scope, ...args) => console.warn(prefix('WARN', scope), ...args),
+  info: (scope, ...args) => console.log(prefix('INFO', scope), ...args),
+  debug: (scope, ...args) => console.log(prefix('DEBUG', scope), ...args)
+}
 
-// Initialize logger fns, log.info, log.error, etc
-loggers.forEach(({ level, fn }, index) => {
-  const enabled = index <= logLevelIndex
+const states = LEVELS.reduce((s, level) => {
+  s[level] = false
+  return s
+}, {})
 
-  // Log levels cannot be the same as native props
-  if (log.hasOwnProperty(level)) throw new Error(`Invalid log level "${level}"`)
-
-  log[level] = (...args) => {
-    if (enabled) fn(...args)
-    log.emit(`log:${level}`, ...args)
+const setLevel = (logLevel) => {
+  if (!states.hasOwnProperty(logLevel)) {
+    throw new Error(`Invalid LOG_LEVEL ${logLevel}.`)
   }
 
-  log[level].enabled = enabled
-})
+  // From which level we will log to the console?
+  const logLevelIndex = LEVELS.findIndex((level) => logLevel === level)
 
-module.exports = log
+  LEVELS.forEach((level, index) => {
+    states[level] = index <= logLevelIndex
+  })
+}
+
+const createLog = (scope = null) => {
+  const log = new EventEmitter()
+
+  log.createLog = createLog
+  log.setLevel = setLevel
+  log.defaultLoggers = defaultLoggers
+  log.LEVELS = LEVELS
+
+  // Initialize logger fns, log.info, log.error, etc
+  LEVELS.forEach((level) => {
+    // Log levels cannot be the same as native props
+    if (log.hasOwnProperty(level)) throw new Error(`Invalid log level "${level}"`)
+
+    log[level] = (...args) => {
+      if (states[level]) {
+        defaultLoggers[level](scope, ...args)
+        baseLogger.emit(`log:${level}`, ...args)
+      }
+    }
+
+    log[level].enabled = () => states[level]
+  })
+
+  return log
+}
+
+const baseLogger = createLog()
+
+module.exports = baseLogger
