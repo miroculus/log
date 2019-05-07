@@ -22,9 +22,7 @@
     "url": "https://github.com/miroculus/log/issues"
   },
   "homepage": "https://github.com/miroculus/log#readme",
-  "dependencies": {
-    "@sentry/node": "5.1.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "mocha": "6.1.4",
     "nodemon": "1.19.0",
