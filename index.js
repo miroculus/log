@@ -1,5 +1,7 @@
-
 const EventEmitter = require('events')
+
+const hasOwnProperty = (obj, key) =>
+  Object.prototype.hasOwnProperty.call(obj, key)
 
 // Pretty print the date, e.g.: "2019-3-13T18:41:02Z" (is UTC-0)
 const now = () => new Date().toISOString()
@@ -31,7 +33,7 @@ const states = LEVELS.reduce((s, level) => {
 }, {})
 
 const setLevel = (logLevel) => {
-  if (!states.hasOwnProperty(logLevel)) {
+  if (!hasOwnProperty(states, logLevel)) {
     throw new Error(`Invalid LOG_LEVEL ${logLevel}.`)
   }
 
@@ -54,7 +56,7 @@ const createLog = (scope = null) => {
   // Initialize logger fns, log.info, log.error, etc
   LEVELS.forEach((level) => {
     // Log levels cannot be the same as native props
-    if (log.hasOwnProperty(level)) throw new Error(`Invalid log level "${level}"`)
+    if (hasOwnProperty(log, level)) throw new Error(`Invalid log level "${level}"`)
 
     log[level] = (...args) => {
       if (states[level]) {
