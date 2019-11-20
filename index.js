@@ -3,11 +3,8 @@ const EventEmitter = require('events')
 const hasOwnProperty = (obj, key) =>
   Object.prototype.hasOwnProperty.call(obj, key)
 
-// Pretty print the date, e.g.: "2019-3-13T18:41:02Z" (is UTC-0)
-const now = () => new Date().toISOString()
-
 const prefix = (level = 'DEBUG', scope = null) =>
-  `[${level}][${now()}]${scope ? `[${scope}]` : ''}`
+  `[${level}]${scope ? `[${scope}]` : ''}`
 
 const LEVELS = [
   'critical',
