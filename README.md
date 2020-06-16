@@ -18,7 +18,7 @@ level and a timestamp:
 const log = require('@miroculus/log')
 
 log.info('some message')
-// [INFO][2019-4-24 23:58:47 -0] some message
+// [INFO] some message
 ```
 
 ## Logging Levels
@@ -52,7 +52,7 @@ const { createLog } = require('@miroculus/log')
 const log = createLog('my-library')
 
 log.info('another message')
-// [INFO][2019-4-24 23:58:47 -0][my-library] another message
+// [INFO][my-library] another message
 ```
 
 ## Logging Triggers
@@ -63,7 +63,10 @@ to the the events `log:${level}`, e.g:
 ```javascript
 const log = require('@miroculus/log')
 
-log.on('log:error', (err) => {
+log.on('log', ({ level, scope, args }) => {
+  // level === 'error'
+  // scope === undefined
+  const [err] = args
   // do wathever you like with the logged err object
 })
 
