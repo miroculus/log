@@ -75,7 +75,7 @@ const createLog = (scope = null) => {
         const logObject = { level, args }
         if (scope) logObject.scope = scope
         defaultLoggers[level](logObject)
-        baseLogger.emit(`log`, logObject)
+        baseLogger.emit('log', logObject)
       }
     }
 
