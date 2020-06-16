@@ -37,31 +37,32 @@ describe('@miroculus/log', () => {
         const msg = `some message with level ${level}`
         const expectations = Promise.all([
           expectCall(log.defaultLoggers, level),
-          expectEmit(log, `log:${level}`)
+          expectEmit(log, 'log')
         ])
 
         log[level](msg)
 
-        const [logged, emitted] = await expectations
+        const [[logged], [emitted]] = await expectations
 
-        assert.deepStrictEqual(logged, [null, msg])
-        assert.deepStrictEqual(emitted, [msg])
+        assert.deepStrictEqual(logged, { level, args: [msg] })
+        assert.deepStrictEqual(emitted, { level, args: [msg] })
       })
     })
   })
 
   describe('scope configuration', () => {
     it('should call default logger with scope', async () => {
+      const level = 'info'
       const msg = 'some message'
       const scope = 'some-scope'
       const scopedLog = log.createLog(scope)
-      const expectation = expectCall(log.defaultLoggers, 'info')
+      const expectation = expectCall(log.defaultLoggers, level)
 
       scopedLog.info(msg)
 
-      const result = await expectation
+      const [result] = await expectation
 
-      assert.deepStrictEqual(result, [scope, msg])
+      assert.deepStrictEqual(result, { level, scope, args: [msg] })
     })
   })
 
@@ -90,16 +91,16 @@ describe('@miroculus/log', () => {
       log.debug('some debug message')
 
       const [
-        criticalResult,
-        errorResult,
-        warnResult,
+        [criticalResult],
+        [errorResult],
+        [warnResult],
         infoResult,
         debugResult
       ] = await expectations
 
-      assert.deepStrictEqual(criticalResult, [null, 'some critical message'])
-      assert.deepStrictEqual(errorResult, [null, 'some error message'])
-      assert.deepStrictEqual(warnResult, [null, 'some warn message'])
+      assert.deepStrictEqual(criticalResult, { level: 'critical', args: ['some critical message'] })
+      assert.deepStrictEqual(errorResult, { level: 'error', args: ['some error message'] })
+      assert.deepStrictEqual(warnResult, { level: 'warn', args: ['some warn message'] })
       assert.ok(infoResult)
       assert.ok(debugResult)
     })

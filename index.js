@@ -1,9 +1,19 @@
 const EventEmitter = require('events')
 
+/**
+ * @typedef {Object} Log
+ * @property {() => void} critical
+ * @property {() => void} error
+ * @property {() => void} warn
+ * @property {() => void} info
+ * @property {() => void} debug
+ * @property {(scope?: string) => Log} createLog create a new logging function with the given scope
+ */
+
 const hasOwnProperty = (obj, key) =>
   Object.prototype.hasOwnProperty.call(obj, key)
 
-const prefix = (level = 'DEBUG', scope = null) =>
+const consolePrefix = (level = 'DEBUG', scope = null) =>
   `[${level}]${scope ? `[${scope}]` : ''}`
 
 const LEVELS = [
@@ -17,11 +27,11 @@ const LEVELS = [
 Object.freeze(LEVELS)
 
 const defaultLoggers = {
-  critical: (scope, ...args) => console.error(prefix('CRITICAL', scope), ...args),
-  error: (scope, ...args) => console.error(prefix('ERROR', scope), ...args),
-  warn: (scope, ...args) => console.warn(prefix('WARN', scope), ...args),
-  info: (scope, ...args) => console.log(prefix('INFO', scope), ...args),
-  debug: (scope, ...args) => console.log(prefix('DEBUG', scope), ...args)
+  critical: ({ scope, args }) => console.error(consolePrefix('CRITICAL', scope), ...args),
+  error: ({ scope, args }) => console.error(consolePrefix('ERROR', scope), ...args),
+  warn: ({ scope, args }) => console.warn(consolePrefix('WARN', scope), ...args),
+  info: ({ scope, args }) => console.log(consolePrefix('INFO', scope), ...args),
+  debug: ({ scope, args }) => console.log(consolePrefix('DEBUG', scope), ...args)
 }
 
 const states = LEVELS.reduce((s, level) => {
@@ -42,6 +52,11 @@ const setLevel = (logLevel) => {
   })
 }
 
+/**
+ * Create an scoped logging function
+ * @param {string} scope
+ * @returns {Log}
+ */
 const createLog = (scope = null) => {
   const log = new EventEmitter()
 
@@ -57,8 +72,10 @@ const createLog = (scope = null) => {
 
     log[level] = (...args) => {
       if (states[level]) {
-        defaultLoggers[level](scope, ...args)
-        baseLogger.emit(`log:${level}`, ...args)
+        const logObject = { level, args }
+        if (scope) logObject.scope = scope
+        defaultLoggers[level](logObject)
+        baseLogger.emit(`log`, logObject)
       }
     }
 
