@@ -3,6 +3,9 @@
   "version": "3.0.0",
   "description": "Node.js log library",
   "main": "index.js",
+  "files": [
+    "index.js"
+  ],
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
