@@ -7,8 +7,9 @@ const { EventEmitter } = require('events')
 /**
  * @typedef {Object} LogValue
  * @property {LogLevel} level
- * @property {string[]} scopes
  * @property {any[]} args
+ * @property {string[]} scopes
+ * @property {number} time
  */
 
 /** @constant {LogLevel[]} */
@@ -111,7 +112,13 @@ class Log extends EventEmitter {
     if (!states[level]) return
 
     /** @type {LogValue} */
-    const logValue = { level, args, scopes: [...this.scopes] }
+    const logValue = {
+      level,
+      args,
+      scopes: [...this.scopes],
+      time: Date.now()
+    }
+
     baseLogger.emit('log', logValue)
   }
 

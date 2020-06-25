@@ -55,17 +55,28 @@ log.info('another message')
 // [INFO][my-library] another message
 ```
 
+Multiple scopes can also be used:
+```javascript
+const { createLog } = require('@miroculus/log')
+
+const log = createLog('my-library', 'sub-module')
+
+log.info('another message')
+// [INFO][my-library][sub-module] another message
+```
+
 ## Logging Triggers
 
 If you want to execute some callback everytime a log is emitted, you can listen
-to the the events `log:${level}`, e.g:
+to the the event `log`, e.g:
 
 ```javascript
 const log = require('@miroculus/log')
 
-log.on('log', ({ level, scope, args }) => {
+log.on('log', ({ level, scopes, args, time }) => {
   // level === 'error'
-  // scope === undefined
+  // scopes === []
+  // time === Date.now()
   const [err] = args
   // do wathever you like with the logged err object
 })

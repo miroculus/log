@@ -5,6 +5,7 @@ const log = require('.')
 describe('@miroculus/log', function () {
   let consoleSpy
   let logMock
+  const time = 1593096750491
 
   beforeAll(() => {
     consoleSpy = {
@@ -15,8 +16,9 @@ describe('@miroculus/log', function () {
     }
 
     logMock = jest.fn()
-
     log.on('log', logMock)
+
+    jest.spyOn(Date, 'now').mockImplementation(() => time)
   })
 
   beforeEach(() => {
@@ -40,7 +42,7 @@ describe('@miroculus/log', function () {
       log[level](msg)
 
       expect(logMock).toHaveBeenCalledTimes(1)
-      expect(logMock).toHaveBeenCalledWith({ level, args: [msg], scopes: [] })
+      expect(logMock).toHaveBeenCalledWith({ level, args: [msg], scopes: [], time })
       expect(consoleSpy[consoleFn]).toHaveBeenCalledTimes(1)
       expect(consoleSpy[consoleFn]).toHaveBeenCalledWith(`[${level.toUpperCase()}]`, msg)
     })
@@ -53,7 +55,7 @@ describe('@miroculus/log', function () {
       scopedLog.info(msg)
 
       expect(logMock).toHaveBeenCalledTimes(1)
-      expect(logMock).toHaveBeenCalledWith({ level: 'info', args: [msg], scopes })
+      expect(logMock).toHaveBeenCalledWith({ level: 'info', args: [msg], scopes, time })
       expect(consoleSpy.log).toHaveBeenCalledTimes(1)
       expect(consoleSpy.log).toHaveBeenCalledWith(`[INFO][${scopes[0]}]`, msg)
     })
@@ -66,7 +68,7 @@ describe('@miroculus/log', function () {
       scopedLog.info(msg)
 
       expect(logMock).toHaveBeenCalledTimes(1)
-      expect(logMock).toHaveBeenCalledWith({ level: 'info', args: [msg], scopes })
+      expect(logMock).toHaveBeenCalledWith({ level: 'info', args: [msg], scopes, time })
       expect(consoleSpy.log).toHaveBeenCalledTimes(1)
       expect(consoleSpy.log).toHaveBeenCalledWith(`[INFO][${scopes[0]}][${scopes[1]}]`, msg)
     })
@@ -89,7 +91,12 @@ describe('@miroculus/log', function () {
         expect(logMock).toHaveBeenCalledTimes(shouldCall ? 1 : 0)
 
         if (shouldCall) {
-          expect(logMock).toHaveBeenCalledWith({ level, args: [msg], scopes: [] })
+          expect(logMock).toHaveBeenCalledWith({
+            level,
+            args: [msg],
+            scopes: [],
+            time
+          })
         }
 
         logMock.mockClear()
