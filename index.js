@@ -1,21 +1,17 @@
-const EventEmitter = require('events')
+const { EventEmitter } = require('events')
 
 /**
- * @typedef {Object} Log
- * @property {() => void} critical
- * @property {() => void} error
- * @property {() => void} warn
- * @property {() => void} info
- * @property {() => void} debug
- * @property {(scope?: string) => Log} createLog create a new logging function with the given scope
+ * @typedef {('critical'|'error'|'warn'|'info'|'debug')} LogLevel
  */
 
-const hasOwnProperty = (obj, key) =>
-  Object.prototype.hasOwnProperty.call(obj, key)
+/**
+ * @typedef {Object} LogValue
+ * @property {LogLevel} level
+ * @property {string[]} scopes
+ * @property {any[]} args
+ */
 
-const consolePrefix = (level = 'DEBUG', scope = null) =>
-  `[${level}]${scope ? `[${scope}]` : ''}`
-
+/** @constant {LogLevel[]} */
 const LEVELS = [
   'critical',
   'error',
@@ -26,65 +22,149 @@ const LEVELS = [
 
 Object.freeze(LEVELS)
 
-const defaultLoggers = {
-  critical: ({ scope, args }) => console.error(consolePrefix('CRITICAL', scope), ...args),
-  error: ({ scope, args }) => console.error(consolePrefix('ERROR', scope), ...args),
-  warn: ({ scope, args }) => console.warn(consolePrefix('WARN', scope), ...args),
-  info: ({ scope, args }) => console.log(consolePrefix('INFO', scope), ...args),
-  debug: ({ scope, args }) => console.log(consolePrefix('DEBUG', scope), ...args)
-}
-
-const states = LEVELS.reduce((s, level) => {
-  s[level] = false
-  return s
-}, {})
-
-const setLevel = (logLevel) => {
-  if (!hasOwnProperty(states, logLevel)) {
-    throw new Error(`Invalid LOG_LEVEL ${logLevel}.`)
-  }
-
-  // From which level we will log to the console?
-  const logLevelIndex = LEVELS.findIndex((level) => logLevel === level)
-
-  LEVELS.forEach((level, index) => {
-    states[level] = index <= logLevelIndex
-  })
+// Its verbose for having better type inference.
+const states = {
+  critical: false,
+  error: false,
+  warn: false,
+  info: false,
+  debug: false
 }
 
 /**
- * Create an scoped logging function
- * @param {string} scope
- * @returns {Log}
+ * @param {Object} obj
+ * @param {string} key
  */
-const createLog = (scope = null) => {
-  const log = new EventEmitter()
+const hasOwnProperty = (obj, key) =>
+  Object.prototype.hasOwnProperty.call(obj, key)
 
-  log.createLog = createLog
-  log.setLevel = setLevel
-  log.defaultLoggers = defaultLoggers
-  log.LEVELS = LEVELS
+class Log extends EventEmitter {
+  /**
+   * Create a log instance
+   * @param {string[]} [scopes]
+   */
+  constructor (scopes = []) {
+    super()
+    this.scopes = scopes
+    this.LEVELS = LEVELS
+    this.Log = Log
 
-  // Initialize logger fns, log.info, log.error, etc
-  LEVELS.forEach((level) => {
-    // Log levels cannot be the same as native props
-    if (hasOwnProperty(log, level)) throw new Error(`Invalid log level "${level}"`)
+    LEVELS.forEach((level) => {
+      this[level] = this[level].bind(this)
+    })
+  }
 
-    log[level] = (...args) => {
-      if (states[level]) {
-        const logObject = { level, args }
-        if (scope) logObject.scope = scope
-        defaultLoggers[level](logObject)
-        baseLogger.emit('log', logObject)
-      }
+  /**
+   * Create a log instance
+   * @param {...string} [scopes]
+   * @returns {Log}
+   */
+  createLog (...scopes) {
+    return new Log(scopes)
+  }
+
+  /**
+   * @param {LogLevel} logLevel
+   */
+  setLevel (logLevel) {
+    if (!hasOwnProperty(states, logLevel)) {
+      throw new Error(`Invalid LOG_LEVEL ${logLevel}.`)
     }
 
-    log[level].enabled = () => states[level]
-  })
+    // From which level we will log to the console?
+    const logLevelIndex = LEVELS.findIndex((level) => logLevel === level)
 
-  return log
+    /**
+     * @param {LogLevel} level
+     * @param {number} index
+     */
+    const updateLogLevel = (level, index) => {
+      states[level] = index <= logLevelIndex
+    }
+
+    LEVELS.forEach(updateLogLevel)
+  }
+
+  /**
+   * Check if the given log level is enabled
+   * @param {LogLevel} logLevel
+   * @returns {boolean}
+   */
+  enabled (logLevel) {
+    return states[logLevel]
+  }
+
+  /**
+   * @param {('log')} evtName
+   * @param {(logValue: LogValue) => void} cb
+   */
+  on (evtName, cb) {
+    return super.on(evtName, cb)
+  }
+
+  /**
+   * @private
+   * @param {LogLevel} level
+   * @param {...any} args
+   */
+  _log (level, ...args) {
+    if (!states[level]) return
+
+    /** @type {LogValue} */
+    const logValue = { level, args, scopes: [...this.scopes] }
+    baseLogger.emit('log', logValue)
+  }
+
+  /**
+   * @param {...any} args
+   */
+  critical (...args) {
+    return this._log('critical', ...args)
+  }
+
+  /**
+   * @param {...any} args
+   */
+  error (...args) {
+    return this._log('error', ...args)
+  }
+
+  /**
+   * @param {...any} args
+   */
+  warn (...args) {
+    return this._log('warn', ...args)
+  }
+
+  /**
+   * @param {...any} args
+   */
+  info (...args) {
+    return this._log('info', ...args)
+  }
+
+  /**
+   * @param {...any} args
+   */
+  debug (...args) {
+    return this._log('debug', ...args)
+  }
 }
 
-const baseLogger = createLog()
+const baseLogger = new Log()
+
+const consoleFnMap = {
+  critical: 'error',
+  error: 'error',
+  warn: 'warn',
+  info: 'log',
+  debug: 'debug'
+}
+
+baseLogger.on('log', function consoleLogger ({ level, scopes, args }) {
+  const scope = scopes.length > 0 ? `[${scopes.join('][')}]` : ''
+  const prefix = `[${level.toUpperCase()}]${scope}`
+  console[consoleFnMap[level]](prefix, ...args)
+})
 
 module.exports = baseLogger
