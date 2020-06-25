@@ -1,6 +1,6 @@
 {
   "name": "@miroculus/log",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Node.js log library",
   "main": "index.js",
   "scripts": {
