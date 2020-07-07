@@ -1,4 +1,4 @@
-FROM node:12.13.0-alpine3.9
+FROM node:12.18.2-alpine
 
 ARG NPM_TOKEN
 
