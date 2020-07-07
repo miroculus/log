@@ -5,7 +5,7 @@ const log = require('.')
 describe('@miroculus/log', function () {
   let consoleSpy
   let logMock
-  const time = 1593096750491
+  const time = Date.now()
 
   beforeAll(() => {
     consoleSpy = {
