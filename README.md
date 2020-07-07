@@ -12,7 +12,7 @@ npm i @miroculus/log
 ## Getting Started
 
 By default, the library will log everything to the console, including the log
-level and a timestamp:
+level:
 
 ```javascript
 const log = require('@miroculus/log')
@@ -68,7 +68,7 @@ log.info('another message')
 ## Logging Triggers
 
 If you want to execute some callback everytime a log is emitted, you can listen
-to the the event `log`, e.g:
+to the event `log`, e.g:
 
 ```javascript
 const log = require('@miroculus/log')
