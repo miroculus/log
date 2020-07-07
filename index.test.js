@@ -104,20 +104,50 @@ describe('@miroculus/log', function () {
     })
   })
 
-  describe('.disableDefaultConsoleLogger()', function () {
-    test('should disable default logging to the console', function () {
-      log.disableDefaultConsoleLogger()
-
+  describe('default console logger', function () {
+    const logMessages = () => {
       log.critical('some logging message')
       log.error('some logging message')
       log.warn('some logging message')
       log.info('some logging message')
       log.debug('some logging message')
+    }
+
+    test('should disable default logging to the console', function () {
+      log.disableDefaultConsoleLogger()
+
+      logMessages()
 
       expect(consoleSpy.error).toHaveBeenCalledTimes(0)
       expect(consoleSpy.warn).toHaveBeenCalledTimes(0)
       expect(consoleSpy.log).toHaveBeenCalledTimes(0)
       expect(consoleSpy.debug).toHaveBeenCalledTimes(0)
+    })
+
+    test('should re-enable default logging to the console', function () {
+      log.disableDefaultConsoleLogger()
+      log.enableDefaultConsoleLogger()
+
+      logMessages()
+
+      expect(consoleSpy.error).toHaveBeenCalledTimes(2)
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(1)
+      expect(consoleSpy.log).toHaveBeenCalledTimes(1)
+      expect(consoleSpy.debug).toHaveBeenCalledTimes(1)
+    })
+
+    test('should re-enable default logging to the console only once', function () {
+      log.disableDefaultConsoleLogger()
+      log.enableDefaultConsoleLogger()
+      log.enableDefaultConsoleLogger()
+      log.enableDefaultConsoleLogger()
+
+      logMessages()
+
+      expect(consoleSpy.error).toHaveBeenCalledTimes(2)
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(1)
+      expect(consoleSpy.log).toHaveBeenCalledTimes(1)
+      expect(consoleSpy.debug).toHaveBeenCalledTimes(1)
     })
   })
 })

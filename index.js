@@ -174,10 +174,16 @@ function consoleLogger ({ level, scopes, args }) {
   console[consoleFnMap[level]](prefix, ...args)
 }
 
-baseLogger.on('log', consoleLogger)
-
 baseLogger.disableDefaultConsoleLogger = () => {
   baseLogger.removeListener('log', consoleLogger)
 }
+
+baseLogger.enableDefaultConsoleLogger = () => {
+  if (!baseLogger.listeners('log').includes(consoleLogger)) {
+    baseLogger.on('log', consoleLogger)
+  }
+}
+
+baseLogger.enableDefaultConsoleLogger()
 
 module.exports = baseLogger
