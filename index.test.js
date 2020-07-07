@@ -103,4 +103,21 @@ describe('@miroculus/log', function () {
       })
     })
   })
+
+  describe('.disableDefaultConsoleLogger()', function () {
+    test('should disable default logging to the console', function () {
+      log.disableDefaultConsoleLogger()
+
+      log.critical('some logging message')
+      log.error('some logging message')
+      log.warn('some logging message')
+      log.info('some logging message')
+      log.debug('some logging message')
+
+      expect(consoleSpy.error).toHaveBeenCalledTimes(0)
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(0)
+      expect(consoleSpy.log).toHaveBeenCalledTimes(0)
+      expect(consoleSpy.debug).toHaveBeenCalledTimes(0)
+    })
+  })
 })
