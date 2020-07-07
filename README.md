@@ -86,3 +86,17 @@ log.error(new Error('some error'))
 
 > A more complex example can be found at [`examples/sentry.js`](examples/sentry.js)
 > which shows how to do a very simple implementation with Sentry.
+
+## Default console logger
+
+By default, the logger will log everything to the console, but this functionality
+can be disabled by running the following on the base logger:
+
+```javascript
+const log = require('@miroculus/log')
+
+log.disableDefaultConsoleLogger()
+```
+
+This is useful to be able to define a custom console logger using the
+[Logging Triggers](#logging-triggers), or disable the console logger altogether.

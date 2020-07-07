@@ -168,10 +168,16 @@ const consoleFnMap = {
   debug: 'debug'
 }
 
-baseLogger.on('log', function consoleLogger ({ level, scopes, args }) {
+function consoleLogger ({ level, scopes, args }) {
   const scope = scopes.length > 0 ? `[${scopes.join('][')}]` : ''
   const prefix = `[${level.toUpperCase()}]${scope}`
   console[consoleFnMap[level]](prefix, ...args)
-})
+}
+
+baseLogger.on('log', consoleLogger)
+
+baseLogger.disableDefaultConsoleLogger = () => {
+  baseLogger.removeListener('log', consoleLogger)
+}
 
 module.exports = baseLogger
