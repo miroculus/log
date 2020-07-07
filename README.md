@@ -96,6 +96,9 @@ can be disabled by running the following on the base logger:
 const log = require('@miroculus/log')
 
 log.disableDefaultConsoleLogger()
+
+// To re-enable the default listener:
+log.enableDefaultConsoleLogger()
 ```
 
 This is useful to be able to define a custom console logger using the
